@@ -209,7 +209,7 @@ public class CamelIntegrationImpl extends MessageIntegrationSPI {
 														"processInstanceId",
 														String.class), ex
 												.getIn().getBody());
-
+								
 								dispatchToEngine(uniqueFlowNodeId,
 										integrationMessage, metaDataValues);
 

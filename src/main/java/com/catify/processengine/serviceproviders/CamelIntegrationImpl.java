@@ -24,7 +24,6 @@ import com.catify.processengine.core.services.MessageDispatcherService;
  */
 public class CamelIntegrationImpl extends MessageIntegrationSPI {
 
-	// configuration items
 	/** The camel context. */
 	private CamelContext camelContext;
 	
@@ -33,6 +32,19 @@ public class CamelIntegrationImpl extends MessageIntegrationSPI {
 	
 	/** The message dispatcher service. */
 	protected MessageDispatcherService messageDispatcherService;
+	
+	/** 
+	 * Map that holds meta data names and their xpath expressions. 
+	 * <li> Key: 'metaDataName' <br>
+	 * <li> Value: 'metaDataXpath' 
+	 */
+	protected Map<String, String> metaDataXpaths;
+	
+	/** Map that holds meta data names and their values returned by the xpath query. 
+	 * <li> Key: 'metaDataName' <br>
+	 * <li> Value: 'metaDataValue' 
+	 */
+	protected Map<String, Object> metaDataValues;
 
 	/**
 	 * Instantiates a new camel integration implementation. The prefix used 
@@ -261,12 +273,6 @@ public class CamelIntegrationImpl extends MessageIntegrationSPI {
 	public String getEndpointUriFromIntegrationString(String messageIntegrationString) {
 		return messageIntegrationString;
 	}
-	
-	/** Map that holds meta data names and their xpath expressions. */
-	protected Map<String, String> metaDataXpaths;
-	
-	/** Map that holds meta data names and their values returned by the xpath query. */
-	protected Map<String, Object> metaDataValues;
 	
 	/**
 	 * Gets the meta data specified in the integration implementation.

@@ -29,25 +29,9 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.camel</groupId>
-			<artifactId>camel-spring</artifactId>
+			<artifactId>camel-test</artifactId>
 			<version>${camel.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.camel</groupId>
-			<artifactId>camel-context</artifactId>
-			<version>${camel.version}</version>
-		</dependency>
-
-		<!-- including external activemq camel dependency because its commonly used -->
-		<dependency>
-			<groupId>org.apache.activemq</groupId>
-			<artifactId>activemq-camel</artifactId>
-			<version>5.6.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.activemq</groupId>
-			<artifactId>activemq-pool</artifactId>
-			<version>5.6.0</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 

@@ -4,14 +4,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.builder.xml.XPathBuilder;
-import org.apache.camel.spring.SpringCamelContext;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.apache.camel.impl.DefaultCamelContext;
 
 import com.catify.processengine.core.integration.IntegrationMessage;
 import com.catify.processengine.core.integration.MessageIntegrationSPI;
@@ -26,8 +25,7 @@ import com.catify.processengine.core.services.MessageDispatcherService;
 public class CamelIntegrationImpl extends MessageIntegrationSPI {
 
 	// configuration items
-	private ApplicationContext springApplicationContext;
-	private SpringCamelContext camelContext;
+	private CamelContext camelContext;
 	private ProducerTemplate camelTemplate;
 	protected MessageDispatcherService messageDispatcherService;
 
@@ -44,11 +42,7 @@ public class CamelIntegrationImpl extends MessageIntegrationSPI {
 	public CamelIntegrationImpl() {
 
 		this.prefix = "camel";
-
-		this.springApplicationContext = new ClassPathXmlApplicationContext(
-				"META-INF/spring/messageIntegrationContext-camel.xml");
-		this.camelContext = (SpringCamelContext) this.springApplicationContext
-				.getBean("camel");
+		this.camelContext = new DefaultCamelContext();
 		this.camelTemplate = this.camelContext.createProducerTemplate();
 		this.messageDispatcherService = new MessageDispatcherService(this);
 	}
@@ -66,8 +60,7 @@ public class CamelIntegrationImpl extends MessageIntegrationSPI {
 			List<TMetaData> metaDataList) {
 
 		// get the endpoint uri for the given flow node
-		String endpointUri = this
-				.getEndpointUriFromIntegrationString(messageIntegrationString);
+		String endpointUri = this.getEndpointUriFromIntegrationString(messageIntegrationString);
 
 		// fill the map that holds meta data names and their xpath expressions
 		this.metaDataXpaths = getMetaDataXpathsMapFromTMetaDataList(metaDataList);
@@ -90,13 +83,15 @@ public class CamelIntegrationImpl extends MessageIntegrationSPI {
 	 *            the meta data list
 	 * @return the meta data xpaths map from t meta data list
 	 */
-	private Map<String, String> getMetaDataXpathsMapFromTMetaDataList(
+	public Map<String, String> getMetaDataXpathsMapFromTMetaDataList(
 			List<TMetaData> metaDataList) {
 		Map<String, String> metaMap = new HashMap<String, String>();
 
-		for (TMetaData tMetaData : metaDataList) {
-			metaMap.put(tMetaData.getMetaDataKey(),
-					tMetaData.getMetaDataXpath());
+		if(metaDataList != null) {
+			for (TMetaData tMetaData : metaDataList) {
+				metaMap.put(tMetaData.getMetaDataKey(),
+						tMetaData.getMetaDataXpath());
+			}
 		}
 
 		return metaMap;
@@ -220,13 +215,13 @@ public class CamelIntegrationImpl extends MessageIntegrationSPI {
 	}
 
 	/**
-	 * Extracts the endpoint uri from the integration string.
+	 * Extracts the endpoint uri from the integration string (eg. seda://in).
 	 * 
 	 * @param messageIntegrationString
 	 *            the message integration string
 	 * @return the endpoint uri from that integration string
 	 */
-	String getEndpointUriFromIntegrationString(String messageIntegrationString) {
+	public String getEndpointUriFromIntegrationString(String messageIntegrationString) {
 		return messageIntegrationString;
 	}
 
@@ -263,6 +258,14 @@ public class CamelIntegrationImpl extends MessageIntegrationSPI {
 		// send request/reply message with camel ProducerTemplate
 		return camelTemplate.requestBodyAndHeaders(routeUri, messageBody,
 				headers);
+	}
+	
+	public Map<String,String> getFlowNodeMap() {
+		return flowNodeIdIntegrationImplMap;
+	}
+
+	public CamelContext getCamelContext() {
+		return camelContext;
 	}
 
 }

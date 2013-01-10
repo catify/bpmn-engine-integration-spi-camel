@@ -54,12 +54,14 @@ public class CamelIntegrationImpl extends MessageIntegrationSPI {
 	 * If you need a Spring ApplicationContext provide one of your own. Note
 	 * that the service providers are dynamically loaded at runtime, so
 	 * built-time weaving will not work.
+	 * @throws Exception 
 	 */
-	public CamelIntegrationImpl() {
+	public CamelIntegrationImpl() throws Exception {
 		this.prefix = "camel";
 		this.messageDispatcherService = new MessageDispatcherService(this);
 		
 		this.camelContext = new DefaultCamelContext();
+		this.camelContext.start();
 		this.camelTemplate = this.camelContext.createProducerTemplate();
 	}
 	

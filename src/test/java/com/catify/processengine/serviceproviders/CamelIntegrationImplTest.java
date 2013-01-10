@@ -63,6 +63,11 @@ public class CamelIntegrationImplTest extends CamelTestSupport {
 	}
 	
 	@Test
+	public void testCamelContext() {
+		assertTrue(spi.getCamelContext().getStatus().isStarted());
+	}
+	
+	@Test
 	public void testStartSend() {
 		spi.startSend("1", "seda://send");
 		assertEquals(1, spi.getFlowNodeMap().size());
@@ -81,6 +86,7 @@ public class CamelIntegrationImplTest extends CamelTestSupport {
 	@Test
 	public void testStartReceive() throws InterruptedException {
 		spi.startReceive("8709", "seda://receive", new ArrayList<TMetaData>());
+		assertNotNull(spi.getCamelContext().getRoute("8709"));
 		assertNotNull(spi.getCamelContext().getEndpoint("seda://receive"));
 	}
 	

@@ -25,26 +25,48 @@ import com.catify.processengine.core.services.MessageDispatcherService;
 public class CamelIntegrationImpl extends MessageIntegrationSPI {
 
 	// configuration items
+	/** The camel context. */
 	private CamelContext camelContext;
+	
+	/** The camel template. */
 	private ProducerTemplate camelTemplate;
+	
+	/** The message dispatcher service. */
 	protected MessageDispatcherService messageDispatcherService;
 
 	/**
-	 * Instantiates a new camel integration implementation. The first two line
-	 * of the constructor are important and always need to be implemented: <li>
-	 * this.prefix = "camel"; --> the prefix used for your implementation and in
-	 * your bpmn-process.xml. <li><br>
+	 * Instantiates a new camel integration implementation. The prefix used 
+	 * for your implementation and in your bpmn process.xml always needs to 
+	 * be defined like this: 
+	 * <pre><code>this.prefix = "camel";</code></pre>
 	 * If you need a Spring ApplicationContext provide one of your own. Note
-	 * that the SPI implementations are dynamically loaded at runtime, so
-	 * built-time weaving will not work. Use a classic approach like in this
-	 * example implementation. <br>
+	 * that the service providers are dynamically loaded at runtime, so
+	 * built-time weaving will not work.
 	 */
 	public CamelIntegrationImpl() {
-
 		this.prefix = "camel";
+		this.messageDispatcherService = new MessageDispatcherService(this);
+		
 		this.camelContext = new DefaultCamelContext();
 		this.camelTemplate = this.camelContext.createProducerTemplate();
-		this.messageDispatcherService = new MessageDispatcherService(this);
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.catify.processengine.core.integration.MessageIntegrationSPI#
+	 * startThrowingIntegrationImplementation(java.lang.String,
+	 * java.lang.String)
+	 */
+	@Override
+	public void startSend(
+			final String uniqueFlowNodeId, String messageIntegrationString) {
+
+		String endpointUri = this.getEndpointUriFromIntegrationString(messageIntegrationString);
+
+		// put identifier and route uri to the map 
+		// to be able to send messages to the correct endpoint later on 
+		flowNodeIdIntegrationMap.put(uniqueFlowNodeId, endpointUri);
 	}
 
 	/*
@@ -55,15 +77,15 @@ public class CamelIntegrationImpl extends MessageIntegrationSPI {
 	 * java.lang.String, java.util.List)
 	 */
 	@Override
-	public void startCatchingIntegrationImplementation(
+	public void startReceive(
 			final String uniqueFlowNodeId, String messageIntegrationString,
-			List<TMetaData> metaDataList) {
+			List<TMetaData> tMetaDatas) {
 
 		// get the endpoint uri for the given flow node
 		String endpointUri = this.getEndpointUriFromIntegrationString(messageIntegrationString);
 
 		// fill the map that holds meta data names and their xpath expressions
-		this.metaDataXpaths = getMetaDataXpathsMapFromTMetaDataList(metaDataList);
+		this.metaDataXpaths = convertTMetaDataListToMap(tMetaDatas);
 
 		// create a route to consume from (defined by the message integration
 		// string in the bpmnProcess.xml)
@@ -74,64 +96,48 @@ public class CamelIntegrationImpl extends MessageIntegrationSPI {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		// put identifier and route uri to the map 
+		// to be able to send messages to the correct endpoint later on 
+		flowNodeIdIntegrationMap.put(uniqueFlowNodeId, endpointUri);
 	}
 
-	/**
-	 * Gets the meta data xpaths map from t meta data list.
-	 * 
-	 * @param metaDataList
-	 *            the meta data list
-	 * @return the meta data xpaths map from t meta data list
-	 */
-	public Map<String, String> getMetaDataXpathsMapFromTMetaDataList(
-			List<TMetaData> metaDataList) {
-		Map<String, String> metaMap = new HashMap<String, String>();
-
-		if(metaDataList != null) {
-			for (TMetaData tMetaData : metaDataList) {
-				metaMap.put(tMetaData.getMetaDataKey(),
-						tMetaData.getMetaDataXpath());
-			}
-		}
-
-		return metaMap;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.catify.processengine.core.integration.MessageIntegrationSPI#
-	 * startThrowingIntegrationImplementation(java.lang.String,
-	 * java.lang.String)
+	/* (non-Javadoc)
+	 * @see com.catify.processengine.core.integration.MessageIntegrationSPI#startRequestReplyIntegrationImplementation(java.lang.String, java.lang.String)
 	 */
 	@Override
-	public void startThrowingIntegrationImplementation(
-			final String uniqueFlowNodeId, String messageIntegrationString) {
+	public void startRequestReply(
+			String uniqueFlowNodeId, String messageIntegrationString) {
+		
+		String endpointUri = this.getEndpointUriFromIntegrationString(messageIntegrationString);
 
-		String endpointUri = this
-				.getEndpointUriFromIntegrationString(messageIntegrationString);
-
-		// put identifier and route uri to the map
-		flowNodeIdIntegrationImplMap.put(uniqueFlowNodeId, endpointUri);
+		// put identifier and route uri to the map 
+		// to be able to send messages to the correct endpoint later on 
+		flowNodeIdIntegrationMap.put(uniqueFlowNodeId, endpointUri);
 	}
-
+	
+	/* (non-Javadoc)
+	 * @see com.catify.processengine.core.integration.MessageIntegrationSPI#shutDownIntegrationImplementation(java.lang.String)
+	 */
 	@Override
 	public boolean shutDownIntegrationImplementation(String uniqueFlowNodeId) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
+	/* (non-Javadoc)
+	 * @see com.catify.processengine.core.integration.MessageIntegrationSPI#send(com.catify.processengine.core.integration.IntegrationMessage)
+	 */
 	@Override
-	public void dispatchIntegrationMessageViaSpiImpl(String uniqueFlowNodeId,
-			IntegrationMessage integrationMessage) {
+	public void send(IntegrationMessage integrationMessage) {
 
-		// get the endpoint uri via the integrationId
-		String routeUri = flowNodeIdIntegrationImplMap.get(uniqueFlowNodeId);
+		// get the endpoint uri via the unique flow node id
+		String routeUri = flowNodeIdIntegrationMap.get(integrationMessage.getUniqueFlowNodeId());
 
 		// create headers from the fields of the integrationMessage
 		Map<String, Object> headers = new HashMap<String, Object>();
 		headers.put("processId", integrationMessage.getProcessId());
-		headers.put("nodeId", integrationMessage.getNodeId());
+		headers.put("uniqueFlowNodeId", integrationMessage.getUniqueFlowNodeId());
 		headers.put("processInstanceId",
 				integrationMessage.getProcessInstanceId());
 
@@ -145,14 +151,42 @@ public class CamelIntegrationImpl extends MessageIntegrationSPI {
 		camelTemplate.sendBodyAndHeaders(routeUri, messageBody, headers);
 	}
 
+	/* (non-Javadoc)
+	 * @see com.catify.processengine.core.integration.MessageIntegrationSPI#receive(com.catify.processengine.core.integration.IntegrationMessage, java.util.Map)
+	 */
 	@Override
-	public void dispatchToEngine(String uniqueFlowNodeId,
-			IntegrationMessage integrationMessage, Map<String, Object> metaData) {
-
-		this.messageDispatcherService.dispatchToEngine(uniqueFlowNodeId,
-				integrationMessage, metaData);
+	public void receive(IntegrationMessage integrationMessage,
+			Map<String, Object> metaData) {
+		this.messageDispatcherService.dispatchToEngine(integrationMessage, metaData);
 	}
 
+	/* (non-Javadoc)
+	 * @see com.catify.processengine.core.integration.MessageIntegrationSPI#requestReply(com.catify.processengine.core.integration.IntegrationMessage)
+	 */
+	@Override
+	public Object requestReply(IntegrationMessage integrationMessage) {
+
+		// get the endpoint uri via the integrationId
+		String routeUri = flowNodeIdIntegrationMap.get(integrationMessage.getUniqueFlowNodeId());
+
+		// create headers from the fields of the integrationMessage
+		Map<String, Object> headers = new HashMap<String, Object>();
+		headers.put("processId", integrationMessage.getProcessId());
+		headers.put("uniqueFlowNodeId", integrationMessage.getUniqueFlowNodeId());
+		headers.put("processInstanceId",
+				integrationMessage.getProcessInstanceId());
+
+		Object messageBody = null;
+		if (integrationMessage.getPayload() == null) {
+			messageBody = "no payload";
+		} else
+			messageBody = integrationMessage.getPayload();
+
+		// send request/reply message with camel ProducerTemplate
+		return camelTemplate.requestBodyAndHeaders(routeUri, messageBody,
+				headers);
+	}
+	
 	/**
 	 * Creates the consumer route for a catching node.
 	 * 
@@ -195,25 +229,28 @@ public class CamelIntegrationImpl extends MessageIntegrationSPI {
 									metaDataValues.put(metaDataKey, value);
 								}
 
+								// mapping the message to the correct flow node id is done via 
+								// the corresponding header (it could also be done via the  
+								// flowNodeIdIntegrationMap or the routeId)
 								IntegrationMessage integrationMessage = new IntegrationMessage(
 										ex.getIn().getHeader("processId",
 												String.class), ex.getIn()
-												.getHeader("nodeId",
+												.getHeader("uniqueFlowNodeId",
 														String.class), ex
 												.getIn().getHeader(
 														"processInstanceId",
 														String.class), ex
 												.getIn().getBody());
 								
-								dispatchToEngine(uniqueFlowNodeId,
-										integrationMessage, metaDataValues);
+								receive(integrationMessage,
+										metaDataValues);
 
 							}
 						}).end();
 			}
 		};
 	}
-
+	
 	/**
 	 * Extracts the endpoint uri from the integration string (eg. seda://in).
 	 * 
@@ -224,48 +261,46 @@ public class CamelIntegrationImpl extends MessageIntegrationSPI {
 	public String getEndpointUriFromIntegrationString(String messageIntegrationString) {
 		return messageIntegrationString;
 	}
-
-	@Override
-	public void startRequestReplyIntegrationImplementation(
-			String uniqueFlowNodeId, String messageIntegrationString) {
-		String endpointUri = this
-				.getEndpointUriFromIntegrationString(messageIntegrationString);
-
-		// put identifier and route uri to the map
-		flowNodeIdIntegrationImplMap.put(uniqueFlowNodeId, endpointUri);
+	
+	/** Map that holds meta data names and their xpath expressions. */
+	protected Map<String, String> metaDataXpaths;
+	
+	/** Map that holds meta data names and their values returned by the xpath query. */
+	protected Map<String, Object> metaDataValues;
+	
+	/**
+	 * Gets the meta data specified in the integration implementation.
+	 *
+	 * @return the meta data
+	 */
+	public Map<String, Object> getMetaDataValues() {
+		return metaDataValues;
 	}
 
-	@Override
-	public Object requestReplyViaSpiImpl(String uniqueFlowNodeId,
-			IntegrationMessage integrationMessage) {
-
-		// get the endpoint uri via the integrationId
-		String routeUri = flowNodeIdIntegrationImplMap.get(uniqueFlowNodeId);
-
-		// create headers from the fields of the integrationMessage
-		Map<String, Object> headers = new HashMap<String, Object>();
-		headers.put("processId", integrationMessage.getProcessId());
-		headers.put("nodeId", integrationMessage.getNodeId());
-		headers.put("processInstanceId",
-				integrationMessage.getProcessInstanceId());
-
-		Object messageBody = null;
-		if (integrationMessage.getPayload() == null) {
-			messageBody = "no payload";
-		} else
-			messageBody = integrationMessage.getPayload();
-
-		// send request/reply message with camel ProducerTemplate
-		return camelTemplate.requestBodyAndHeaders(routeUri, messageBody,
-				headers);
+	/**
+	 * Sets the meta data specified in the integration implementation.
+	 *
+	 * @param metaData the meta data
+	 */
+	public void setMetaDataValues(Map<String, Object> metaData) {
+		this.metaDataValues = metaData;
 	}
 	
+	/**
+	 * Gets the flow node map.
+	 *
+	 * @return the flow node map
+	 */
 	public Map<String,String> getFlowNodeMap() {
-		return flowNodeIdIntegrationImplMap;
+		return flowNodeIdIntegrationMap;
 	}
 
+	/**
+	 * Gets the camel context.
+	 *
+	 * @return the camel context
+	 */
 	public CamelContext getCamelContext() {
 		return camelContext;
 	}
-
 }

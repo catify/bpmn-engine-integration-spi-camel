@@ -256,6 +256,10 @@ public class CamelIntegrationImpl extends MessageIntegrationSPI {
 														String.class), ex
 												.getIn().getBody());
 								
+								if (integrationMessage.getUniqueFlowNodeId() == null) {
+									integrationMessage.setUniqueFlowNodeId(uniqueFlowNodeId);
+								}
+								
 								receive(integrationMessage,
 										metaDataValues);
 

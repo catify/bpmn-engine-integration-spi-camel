@@ -1,10 +1,26 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+
 	<groupId>com.catify.bpmn</groupId>
 	<artifactId>integration-spi-camel</artifactId>
 	<version>1.0</version>
-	<name>camelintegration</name>
+	<name>catify BPMN Engine Core - Camel Integration Service Provider</name>
+
+	<url>http://www.catify.com</url>
+
+	<description>Camel service provider for the Integration SPI of the catify BPMN Engine Core</description>
+
+	<scm>
+		<url>https://github.com/catify/bpmn-engine-integration-spi-camel</url>
+	</scm>
+
+	<licenses>
+		<license>
+			<name>The Apache Software License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+		</license>
+	</licenses>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -49,7 +65,7 @@
 					<target>1.6</target>
 				</configuration>
 			</plugin>
-			
+
 			<!-- license -->
 			<plugin>
 				<groupId>com.mycila.maven-license-plugin</groupId>
@@ -58,8 +74,8 @@
 					<header>src/main/resources/apache_license.txt</header>
 				</configuration>
 			</plugin>
-			
-			
+
+
 			<!-- include sources -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

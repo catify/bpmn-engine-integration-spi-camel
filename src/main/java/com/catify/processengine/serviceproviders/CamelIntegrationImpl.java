@@ -38,6 +38,8 @@ import com.catify.processengine.core.services.MessageDispatcherService;
  * The Class CamelIntegrationImpl is a reference implementation of the
  * MessageIntegrationSPI for the Apache Camel framework. <br>
  * 
+ * @author christopher köster
+ * 
  */
 public class CamelIntegrationImpl extends MessageIntegrationSPI {
 

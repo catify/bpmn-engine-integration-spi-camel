@@ -7,4 +7,4 @@ Simply build it via the usual
 
 "mvn clean install"
 
-and place the jar in the services folder of the bpmn-engine.
+and place the jar in the classpath of the bpmn-engine.

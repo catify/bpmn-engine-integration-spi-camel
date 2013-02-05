@@ -75,6 +75,23 @@
 				</configuration>
 			</plugin>
 
+			<!-- gpg -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>sign-artifacts</id>
+						<configuration>
+							<keyname>catify</keyname>
+						</configuration>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 
 			<!-- include sources -->
 			<plugin>
